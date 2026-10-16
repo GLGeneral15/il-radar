@@ -1,0 +1,20 @@
+# Local development artifacts that must not be published.
+
+# Exploratory and one-off build scripts kept on the dev machine only.
+_build/
+
+# Harness runtime state: Chrome profile, Playwright dependencies, logs, session ids.
+.dsh/
+ai-literacy-runtime/
+*.log
+
+# Anything a local installation records about itself.
+paths.json
+runtime-path.txt
+
+# OS and editor noise.
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/

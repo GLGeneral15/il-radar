@@ -1,0 +1,12 @@
+{
+  "name": "ai-literacy-browser-runtime",
+  "version": "2.9.0",
+  "private": true,
+  "description": "Direct Playwright library runtime for the AI literacy search skill",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "playwright": "1.64.0"
+  }
+}

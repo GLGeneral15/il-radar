@@ -1,0 +1,35 @@
+# Normalise line endings for every text file so Windows and Linux checkouts produce the same
+# bytes and diffs stay readable. The repository is written with LF; Git converts on checkout
+# only when a rule below asks it to.
+* text=auto eol=lf
+
+# Windows scripts: keep LF. They run under PowerShell 5.1 and 7, both of which read LF fine,
+# and pinning LF avoids whole-file diffs against contributors on other platforms.
+*.ps1 text eol=lf
+
+# Explicit text types.
+*.md   text eol=lf
+*.json text eol=lf
+*.cjs  text eol=lf
+*.js   text eol=lf
+*.mjs  text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.txt  text eol=lf
+*.csv  text eol=lf
+.gitattributes text eol=lf
+.gitignore     text eol=lf
+LICENSE        text eol=lf
+
+# Binary: never touch these.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.xlsx binary
+*.pdf  binary
+*.zip  binary
+
+# Keep the generated question-bank JSON out of diff summaries. It is one long file with a
+# content digest, so a meaningful diff is impractical; inspect changes with the tools instead.
+references/question-bank.json -diff linguist-generated
