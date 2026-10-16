@@ -82,7 +82,7 @@ $adapterSource = $PackageRoot
 $bundleSource = $PackageRoot
 
 # The repo is flat: runtime scripts, skill definition and the adapter all sit at the root, and
-# only the items below belong in an installed skill. `_build`, `_src` and `banks` stay local.
+# only the items below belong in an installed skill. `_build` and `banks` stay local.
 # `runtime` must be copied as well: preparation.cjs reads <bundle>/runtime/package.json.
 $adapterFiles = @('daemon.cjs', 'ailit.cjs', 'ailit.ps1')
 $payloadDirectories = @('scripts', 'references', 'runtime', 'tools')
@@ -165,13 +165,42 @@ foreach ($directory in @($targetAdapter, $RuntimeRoot)) {
     [IO.Directory]::CreateDirectory($directory) | Out-Null
 }
 
+# Resolve a path relative to the package when it lives inside it, so the recorded configuration
+# stays valid if the package (or a linking skill root) is moved.
+function Get-RelativeOrAbsolute {
+    param([string] $Base, [string] $Path)
+    $baseFull = [IO.Path]::GetFullPath($Base).TrimEnd('\') + '\'
+    $pathFull = [IO.Path]::GetFullPath($Path)
+    if ($pathFull.StartsWith($baseFull, [StringComparison]::OrdinalIgnoreCase)) {
+        return $pathFull.Substring($baseFull.Length)
+    }
+    return $pathFull
+}
+
 # Adapter files (small, owned by this package) plus the DSH-facing skill definition.
 foreach ($name in $adapterFiles) {
     Copy-Item -LiteralPath (Join-Path $adapterSource $name) -Destination (Join-Path $targetAdapter $name) -Force
 }
 Copy-Item -LiteralPath (Join-Path $adapterSource 'SKILL.md') -Destination (Join-Path $target 'SKILL.md') -Force
 
-# Skill payload: only the directories the runtime needs. _build, _src, banks and .git stay out.
+# Record the resolved locations for the wrapper and the daemon, relative to the package so the
+# configuration stays valid if the package (or a linking skill root) is moved.
+#
+# Written here, immediately after the adapter lands, and deliberately before the Playwright step:
+# if a caller pipes this script's output into Select-Object or Select-String, PowerShell can stop
+# the script early. Anything written after the first such output would then be skipped, leaving a
+# half-installed skill. Keeping the configuration writes early makes that failure mode harmless.
+$packageLocationBase = [IO.Path]::GetFullPath($PackageRoot)
+$pathsConfig = [ordered]@{
+    runtimeDir = Get-RelativeOrAbsolute -Base $packageLocationBase -Path $RuntimeRoot
+    daemonDir  = Get-RelativeOrAbsolute -Base $packageLocationBase -Path $DaemonStateRoot
+}
+[IO.File]::WriteAllText((Join-Path $targetAdapter 'paths.json'),
+    ($pathsConfig | ConvertTo-Json -Depth 3) + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Join-Path $targetAdapter 'runtime-path.txt'),
+    $RuntimeRoot + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
+
+# Skill payload: only the directories the runtime needs. _build, banks and .git stay out.
 $payloadCount = 0
 foreach ($directory in $payloadDirectories) {
     $sourceDirectory = Join-Path $bundleSource $directory
@@ -211,29 +240,10 @@ if (-not $runtimeReady) {
     Write-Output 'Playwright runtime already present; reused.'
 }
 
-# Record the resolved locations for the wrapper and the daemon, relative to the package so the
-# configuration stays valid if the package (or a linking skill root) is moved.
-$packageLocationBase = [IO.Path]::GetFullPath($PackageRoot)
-$daemonStateRoot = $DaemonStateRoot
-function Get-RelativeOrAbsolute {
-    param([string] $Base, [string] $Path)
-    $baseFull = [IO.Path]::GetFullPath($Base).TrimEnd('\') + '\'
-    $pathFull = [IO.Path]::GetFullPath($Path)
-    if ($pathFull.StartsWith($baseFull, [StringComparison]::OrdinalIgnoreCase)) {
-        return $pathFull.Substring($baseFull.Length)
-    }
-    return $pathFull
-}
-$pathsConfig = [ordered]@{
-    runtimeDir = Get-RelativeOrAbsolute -Base $packageLocationBase -Path $RuntimeRoot
-    daemonDir  = Get-RelativeOrAbsolute -Base $packageLocationBase -Path $daemonStateRoot
-}
-[IO.File]::WriteAllText((Join-Path $targetAdapter 'paths.json'),
-    ($pathsConfig | ConvertTo-Json -Depth 3) + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
-[IO.File]::WriteAllText((Join-Path $targetAdapter 'runtime-path.txt'),
-    $RuntimeRoot + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
-[IO.Directory]::CreateDirectory($daemonStateRoot) | Out-Null
-Write-Output "Daemon state: $daemonStateRoot"
+# The daemon state directory is created here; the location records were written earlier, before
+# the first output that a pipeline could cut short.
+[IO.Directory]::CreateDirectory($DaemonStateRoot) | Out-Null
+Write-Output "Daemon state: $DaemonStateRoot"
 
 # --- verify -----------------------------------------------------------------------------
 
