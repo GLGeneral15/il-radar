@@ -129,8 +129,7 @@ whenToUse: 用户要求"准备答题"、发来信息素养题（题干+选项/�
 ## 深入资料
 
 - `references/question-bank.md` — 题库格式、匹配边界与贡献方式
-- `references/retrieval.md` — 官方端点与检索语法
-- `references/browser.md` / `browser-api.md` — 浏览器接口与流程
-- `references/recipes.md` — 网站检索流程与示例
-- `references/exam-scope.md` — 命题范围
-- `references/sites/*.json` — 252 个网站入口流程
+- `references/retrieval.md` — 证据分流、实测官方端点、**全文与页面核对**三条硬规则
+- `references/browser-automation.md` — Chrome 会话接口、站点流程执行、规则卡与归档
+- `references/exam-scope.md` — 命题范围与按题找来源
+- `references/sites/*.json` — 252 个网站入口档案

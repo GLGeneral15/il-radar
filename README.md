@@ -32,21 +32,39 @@
 - Windows + PowerShell + Node.js 20+
 - 本机已安装 Google Chrome
 
-### 安装（Codex / 支持 Skills 的环境）
-
-```powershell
-git clone https://github.com/<you>/il-radar.git
-cd il-radar
-.\scripts\install.ps1 -Target both
-```
-
 ### 安装（DeepSeek Harness）
 
 ```powershell
+git clone https://github.com/GLGeneral15/il-radar.git
+cd il-radar
 .\setup-dsh.ps1 -PackageRoot '<本目录>' -ProjectRoot '<你的项目根>'
 ```
 
-DSH 只在固定路径发现技能，安装脚本会写入技能根与 `paths.json`（记录运行时与状态目录位置）。详见 `README-DSH.md`。
+脚本会读取 `SKILL.md` 的 `name` 决定技能目录名，复制运行时与资料，安装 Playwright 依赖，写出 `paths.json`，最后做一次健康检查。详见 [README-DSH.md](README-DSH.md)。
+
+安装后校验逐文件一致：
+
+```powershell
+.\verify-dsh.ps1 -PackageRoot '<本目录>' -ProjectRoot '<你的项目根>'
+```
+
+### 安装（其他支持 Agent Skills 的环境）
+
+本仓库是标准技能布局，手动复制即可：在宿主的 skills 目录下建一个名为 `il-radar` 的文件夹，把以下内容放进去——
+
+```
+SKILL.md
+daemon.cjs  ailit.cjs  ailit.ps1
+scripts/  references/  runtime/  tools/
+```
+
+再把 Playwright 装到某个目录（`npm ci` 于 `runtime/`，`PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`），并在 `paths.json` 中写明运行时与守护进程状态目录：
+
+```json
+{ "runtimeDir": "..\\.dsh\\ai-literacy-runtime", "daemonDir": "..\\ai-literacy-search" }
+```
+
+**当前只有 DeepSeek Harness 这条路径经过端到端验证**，其他宿主请按上述结构自行适配。
 
 ### 使用
 
@@ -100,12 +118,12 @@ il-radar/
 ├─ references/
 │  ├─ question-bank.json       题库（1017 题）
 │  ├─ question-bank.md         题库格式与匹配边界
-│  ├─ retrieval.md             官方端点与检索语法
-│  ├─ browser.md / browser-api.md   浏览器接口
-│  ├─ recipes.md / exam-scope.md
+│  ├─ retrieval.md             证据分流、官方端点、全文与页面核对
+│  ├─ browser-automation.md    Chrome 会话接口、流程执行、规则卡
+│  ├─ exam-scope.md            命题范围与按题找来源
 │  ├─ rules.json / sources.json / search-index.json
 │  ├─ rule-evidence/           6 张规则卡的证据
-│  └─ sites/                   252 个网站入口流程
+│  └─ sites/                   252 个网站入口档案
 ├─ tools/                      质量保障工具
 └─ _src/题库.xlsx              题库源表格
 ```
