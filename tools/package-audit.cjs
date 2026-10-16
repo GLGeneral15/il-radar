@@ -21,10 +21,18 @@ const TEXT_EXT = new Set(['.md', '.json', '.cjs', '.js', '.mjs', '.ps1', '.txt',
 const personalFragments = ['罗', '天', '嘉'];
 const studentIdFragments = ['2025', '0417', '00131'];
 
+// Token prefixes are assembled from fragments for the same reason as the identifiers above:
+// this file must pass its own scan. Writing them literally made the audit report itself.
+const tokenPrefixes = ['s' + 'k-', 'g' + 'hp_', 'AK' + 'IA'];
+const tokenPattern = new RegExp(
+  `\\b(?:${tokenPrefixes[0]}[A-Za-z0-9]{16,}|${tokenPrefixes[1]}[A-Za-z0-9]{20,}|${tokenPrefixes[2]}[0-9A-Z]{16})`,
+  'g',
+);
+
 const critical = {
   personal_name: new RegExp(personalFragments.join(''), 'g'),
   student_id: new RegExp(studentIdFragments.join(''), 'g'),
-  secret_like: /\b(?:sk-[A-Za-z0-9]{16,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16})/g,
+  secret_like: tokenPattern,
   private_key: /-----BEGIN [A-Z ]*PRIVATE KEY-----/g,
   bearer_token: /Bearer\s+[A-Za-z0-9._-]{24,}/g,
   session_id: /;jsessionid=[A-Za-z0-9.]+|\b(?:sessionid|PHPSESSID)=[A-Za-z0-9]{16,}/gi,
@@ -41,6 +49,12 @@ const informational = {
 const criticalHits = [];
 const infoHits = [];
 let scanned = 0, binaries = 0, bytes = 0;
+
+if (!fs.existsSync(repo) || !fs.statSync(repo).isDirectory()) {
+  console.error(`Not a directory: ${repo}`);
+  console.error('usage: node tools/package-audit.cjs [repo-root]');
+  process.exit(2);
+}
 
 function walk(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
