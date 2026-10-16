@@ -39,9 +39,15 @@ const critical = {
 };
 
 const informational = {
-  // Escaped sequences in recorded page text must not be mistaken for paths, so the pattern
-  // stays inside plain printable characters.
-  windows_absolute_path: /[A-Za-z]:\\(?:[A-Za-z0-9 _.-]+\\?){1,}/g,
+  // A real path continues with a segment of two or more characters followed by another
+  // separator. That one condition rejects every escape artefact that previously produced false
+  // hits: page text ending in "...navigating" followed by "\n\u001b[2m" yielded a bogus
+  // "g:\n\u001b", and PowerShell's "\s" yielded "e:\s". A first-character blacklist cannot be
+  // used instead, because "\d" is a regex escape while "D:" is a drive letter.
+  //
+  // Trade-off: a path whose first directory is one character ("x:\a\b") is not reported. That
+  // shape does not occur here, and an informational hint is worth less than a false alarm.
+  windows_absolute_path: /[A-Za-z]:\\(?=[A-Za-z0-9 _.-]{2,}\\)(?:[A-Za-z0-9 _.-]+\\?)+/g,
   local_dev_marker: /dsh-runtimes|AppData\\Local|deepseek harness/gi,
   email_like: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
 };
