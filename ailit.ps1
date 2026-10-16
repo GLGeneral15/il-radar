@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  DSH wrapper for the ai-literacy-search skill: talks to the persistent Chrome daemon.
+  DSH wrapper for the il-radar skill: talks to the persistent Chrome daemon.
 
 .DESCRIPTION
   DSH has no persistent Node tool, so this skill runs a background daemon that owns one
@@ -8,21 +8,24 @@
   command to that daemon; the daemon starts on first use and keeps Chrome and logins alive
   between turns.
 
-  Log files and the session ID live under $DSH_HOME\ai-literacy-search.
-  The Playwright runtime lives under $HOME\.ailiteracy-runtime.
+  Log files and the session ID live in the daemon directory recorded by setup-dsh.ps1 in
+  paths.json (default: $DSH_HOME\ai-literacy-search). The Playwright runtime location comes
+  from the same file.
 
 .EXAMPLE
   .\ailit.ps1 health
   .\ailit.ps1 prepare
   .\ailit.ps1 bank-status
   .\ailit.ps1 lookup -QuestionFile .\q.json
+  .\ailit.ps1 rule-card -RuleId retrieval-metrics
+  .\ailit.ps1 calculate -QuestionFile .\calc.json
   .\ailit.ps1 pages
   .\ailit.ps1 call -Method observe -Args .\args.json
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true, Position = 0)]
-    [ValidateSet('health', 'start', 'prepare', 'bank-status', 'lookup', 'search', 'pages', 'open', 'call', 'close', 'shutdown')]
+    [ValidateSet('health', 'start', 'prepare', 'bank-status', 'lookup', 'search', 'rule-card', 'preload-rules', 'calculate', 'pages', 'open', 'call', 'close', 'shutdown')]
     [string] $Command,
 
     [string] $QuestionFile,
@@ -32,6 +35,7 @@ param(
     [string] $Recipe,
     [string] $Params,
     [string] $Url,
+    [string] $RuleId,
     [int] $Limit = 3,
     [int] $TimeoutMs = 180000,
     [switch] $NoSources
@@ -96,7 +100,7 @@ if (-not $bundleRoot) { throw 'Cannot locate the skill bundle (scripts/browser.c
 $env:AI_LITERACY_SKILL_ROOT = $bundleRoot
 $env:AI_LITERACY_RUNTIME_DIR = Resolve-Runtime -BundleRoot $bundleRoot -AdapterDir $adapterDir
 
-$node = (Get-Command node.exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1).Source
+$node = (Get-Command node.exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1).Path
 if (-not $node) { throw 'Node.js 20+ is required but node.exe was not found on PATH.' }
 
 $arguments = @($client, $Command, '--timeoutMs', $TimeoutMs)
@@ -114,6 +118,14 @@ switch ($Command) {
         if (-not $Recipe) { throw 'search needs -Recipe <recipeId>.' }
         $arguments += @('--question-file', $QuestionFile, '--recipe', $Recipe)
         if ($Params) { $arguments += @('--params', $Params) }
+    }
+    'rule-card' {
+        if (-not $RuleId) { throw 'rule-card needs -RuleId <id>. Read available ids from the rules table in references/browser-automation.md.' }
+        $arguments += @('--rule-id', $RuleId)
+    }
+    'calculate' {
+        if (-not $QuestionFile) { throw 'calculate needs -QuestionFile <calc.json> containing operation, inputs and inputQuotes.' }
+        $arguments += @('--question-file', $QuestionFile)
     }
     'open' {
         if (-not $Url) { throw 'open needs -Url <url>.' }

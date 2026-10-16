@@ -9,6 +9,9 @@
  *   node ailit.cjs lookup --question-file <q.json>
  *   node ailit.cjs prepare [--sources id1,id2] [--none]
  *   node ailit.cjs search --question-file <q.json> --recipe <id> [--params p.json]
+ *   node ailit.cjs rule-card --rule-id <id>
+ *   node ailit.cjs preload-rules
+ *   node ailit.cjs calculate --question-file <calc.json>
  *   node ailit.cjs pages
  *   node ailit.cjs open --url <url>
  *   node ailit.cjs call --method observe [--args a.json]
@@ -161,6 +164,11 @@ async function main() {
     case 'lookup': payload = { command: 'lookup', args: { question: readJSONFile(flags['question-file']), options: { limit: Number(flags.limit || 3) } } }; break;
     case 'prepare': payload = { command: 'prepare', args: { sourceIds: flags.none ? [] : flags.sources ? String(flags.sources).split(',').map(item => item.trim()).filter(Boolean) : undefined } }; break;
     case 'search': payload = { command: 'runSearch', args: { question: readJSONFile(flags['question-file']), options: Object.assign({ recipeId: flags.recipe }, flags.params ? readJSONFile(flags.params) : {}) } }; break;
+    // Stable rule cards and local calculations are part of this skill's documented behaviour, so
+    // they get real commands rather than being reachable only through the generic passthrough.
+    case 'rule-card': payload = { command: 'ruleCard', args: { ruleId: flags['rule-id'] } }; break;
+    case 'preload-rules': payload = { command: 'preloadRules', args: {} }; break;
+    case 'calculate': payload = { command: 'calculate', args: readJSONFile(flags['question-file']) }; break;
     case 'call': payload = { command: 'call', args: { method: flags.method, args: flags.args ? readJSONFile(flags.args) : {} } }; break;
     default: throw new Error('Unknown command: ' + command + ' (see the header of ailit.cjs)');
   }

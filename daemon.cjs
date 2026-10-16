@@ -198,7 +198,14 @@ async function dispatch(command, args = {}) {
     }
     case 'calculate': {
       await ensureStarted();
-      return session.calculate(args.ruleId, args.parameters, args.options || {});
+      // SearchSession.calculate(question, {operation, inputs, inputQuotes}). The first argument
+      // is the bound question, not a rule id: this call previously passed args.ruleId and
+      // args.parameters, so every calculation failed with a mismatched question object.
+      return session.calculate(args.question, {
+        operation: args.operation,
+        inputs: args.inputs,
+        inputQuotes: args.inputQuotes,
+      });
     }
     case 'runSearch': {
       await ensureStarted();
