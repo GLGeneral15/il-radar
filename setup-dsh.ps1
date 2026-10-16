@@ -31,7 +31,7 @@
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
-    # Directory that contains _dsh\ and ai-information-literacy-search\. Defaults to this script's parent.
+    # Directory holding SKILL.md, scripts\, references\, runtime\ and tools\. Defaults to this script's folder.
     [string] $PackageRoot,
     # DSH skill root to install into. Defaults to <ProjectRoot>\.dsh\skills.
     [string] $SkillsRoot,

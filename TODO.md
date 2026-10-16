@@ -11,7 +11,7 @@ Assembly status.
 - [x] 19 条旧库判断题按"字母→选项文字"链路重建 `judge_answer`，冲突留痕于 `issue_details`
 - [x] `tools/` 六件套：`build-digest` / `validate-bank` / `list-flagged` / `match-regression` / `stamp-release` / `package-audit`
 - [x] `SKILL.md` / `README.md` / `README-DSH.md` / `references/question-bank.md` 重写
-- [x] `LICENSE`（MIT，含上游署名）/ `.gitignore`
+- [x] `LICENSE`（MIT，保留法定上游版权声明）/ `.gitignore`
 - [x] DSH 适配层整理进仓库（`daemon.cjs` / `ailit.cjs` / `ailit.ps1` / `setup-dsh.ps1` / `verify-dsh.ps1`）
 - [x] **端到端安装验证**：装出 299 个文件、Playwright 就位、健康检查通过、`bank-status` 报 1017 条全可用、`prepare` 报 252/252 站点流程
 - [x] **补注册表缺口**：新增 5 个档案（Connected Papers / Semantic Scholar / OpenAlex / 港科大机构库 / 人大复印报刊资料）；运行时 `preload` **252/252 加载成功**、311 条流程

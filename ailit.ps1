@@ -80,12 +80,11 @@ function Resolve-Runtime {
     return $canonical
 }
 
-# The skill bundle may sit beside the adapter directory or one level up when the package
-# is kept whole (adapter in <package>\_dsh, bundle in <package>\ai-literacy-search).
+# The adapter sits at the skill root beside scripts/, so the bundle is normally this directory.
+# The parent is also checked so an adapter kept in a subdirectory still resolves.
 $bundleCandidates = @(
-    (Join-Path $adapterDir '..\ai-literacy-search'),
-    (Join-Path $adapterDir '..\ai-information-literacy-search\ai-literacy-search'),
-    $adapterDir
+    $adapterDir,
+    (Join-Path $adapterDir '..')
 )
 $bundleRoot = $null
 foreach ($candidate in $bundleCandidates) {
