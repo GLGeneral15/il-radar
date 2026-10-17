@@ -26,7 +26,7 @@ whenToUse: 用户要求"准备答题"、发来信息素养题（题干+选项/�
 用户说"准备答题"时执行：
 
 ```powershell
-& '<技能目录>\_dsh\ailit.ps1' prepare
+& '<技能目录>\ailit.ps1' prepare
 ```
 
 预热可见 Chrome、252 份网站流程、6 张规则卡与题库，并打开默认五站（知网、万方、维普、读秀、超星汇雅），只回报**简短摘要**。
@@ -54,7 +54,7 @@ whenToUse: 用户要求"准备答题"、发来信息素养题（题干+选项/�
 `type` 取 `single` / `multiple` / `judge`（判断题选项写 `{"A":"正确","B":"错误"}`）。
 
 ```powershell
-& '<技能目录>\_dsh\ailit.ps1' lookup -QuestionFile '.\q.json'
+& '<技能目录>\ailit.ps1' lookup -QuestionFile '.\q.json'
 ```
 
 **命中（`matched`）就直接作答，不要再去核验。** 用返回的 `answer_labels` 与 `answer_texts`。
@@ -65,7 +65,7 @@ whenToUse: 用户要求"准备答题"、发来信息素养题（题干+选项/�
 
 - 题干被改写、增删限定语或数字
 - 任一选项文字不同
-- 题型判断错误（`single` 写成 `multiple` 等，会直接掉到 27% 命中率）
+- 题型判断错误（`single` 写成 `multiple` 等）—— 精确匹配要求题型一致，题型错了只会返回候选（`candidates`），不会命中
 
 题库命中时来源写"用户提供题库"，不要声称刚访问官网或已独立核验。
 
@@ -79,11 +79,11 @@ whenToUse: 用户要求"准备答题"、发来信息素养题（题干+选项/�
 4. **可见 Chrome** —— 需要站点交互时
 
 ```powershell
-& '<技能目录>\_dsh\ailit.ps1' call -Method findRecipes -Args '.\args.json'
-& '<技能目录>\_dsh\ailit.ps1' search -QuestionFile '.\q.json' -Recipe '<recipeId>' -Params '.\params.json'
-& '<技能目录>\_dsh\ailit.ps1' open -Url 'https://...'
-& '<技能目录>\_dsh\ailit.ps1' pages
-& '<技能目录>\_dsh\ailit.ps1' call -Method observe -Args '.\args.json'
+& '<技能目录>\ailit.ps1' call -Method findRecipes -Args '.\args.json'
+& '<技能目录>\ailit.ps1' search -QuestionFile '.\q.json' -Recipe '<recipeId>' -Params '.\params.json'
+& '<技能目录>\ailit.ps1' open -Url 'https://...'
+& '<技能目录>\ailit.ps1' pages
+& '<技能目录>\ailit.ps1' call -Method observe -Args '.\args.json'
 ```
 
 `-Args` 支持 `{"pageIndex":0}` 或 `{"url":"https://..."}`；省略时读取最后一个非空白页。
@@ -116,7 +116,10 @@ whenToUse: 用户要求"准备答题"、发来信息素养题（题干+选项/�
 | `prepare` | 预热 Chrome、资料与五站 |
 | `lookup` | 题库比对（不需要浏览器） |
 | `search` / `open` / `pages` | 按流程检索 / 开页 / 看页 |
-| `call -Method <name>` | 调用会话方法：`observe`、`inspect`、`findRecipes`、`beginQuestion`、`saveAnswer` 等 |
+| `rule-card -RuleId <id>` | 读取一张稳定规则卡（6 张，见 `references/browser-automation.md`） |
+| `preload-rules` | 预载全部规则卡 |
+| `calculate -QuestionFile <json>` | 题内复算并留下证明（先绑定题目） |
+| `call -Method <name>` | 透传会话方法，**仅限** `references/browser-automation.md` 列出的 15 个 |
 | `close` / `shutdown` | 关浏览器 / 停守护进程（**仅用户明确要求时**） |
 
 ## 排障
